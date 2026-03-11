@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS quiz_votes;
+DROP TABLE IF EXISTS quiz_results;
+DROP TABLE IF EXISTS quiz_questions;
+DROP TABLE IF EXISTS quizzes;
+DROP TABLE IF EXISTS games;
+DROP TABLE IF EXISTS users;
+
