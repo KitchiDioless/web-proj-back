@@ -14,7 +14,7 @@ import LoginPage from "./pages/LoginPage"
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/web-project/">
+      <Router>
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
