@@ -1,4 +1,5 @@
-import { PrismaClient, QuizDifficulty } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -84,11 +85,25 @@ async function findGameIdByTitle(gameTitle: string) {
 }
 
 async function main() {
-  const admin = await prisma.user.findUnique({
+  let admin = await prisma.user.findUnique({
     where: { email: 'admin@example.com' },
     select: { id: true },
   });
-  if (!admin) throw new Error('admin@example.com not found. Run seed first.');
+  if (!admin) {
+    const passwordHash = await bcrypt.hash('password', 10);
+    admin = await prisma.user.upsert({
+      where: { email: 'admin@example.com' },
+      update: { role: 'admin' },
+      create: {
+        username: 'admin',
+        email: 'admin@example.com',
+        passwordHash,
+        role: 'admin',
+      },
+      select: { id: true },
+    });
+    console.log('Created fallback admin@example.com for mock quizzes import');
+  }
 
   let imported = 0;
   for (const q of mockQuizzes) {
@@ -104,7 +119,6 @@ async function main() {
     });
 
     if (existing) {
-      // keep existing quiz, but ensure cover/description present
       await prisma.quiz.update({
         where: { id: existing.id },
         data: {
@@ -124,7 +138,7 @@ async function main() {
         title: q.title,
         description: q.description,
         coverImage: q.coverImage ?? null,
-        difficulty: QuizDifficulty.easy,
+        difficulty: 'easy',
         questions: {
           create: q.questions.map((qq, idx) => ({
             order: idx + 1,
