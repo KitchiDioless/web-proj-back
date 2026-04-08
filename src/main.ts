@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { join } from 'path';
+import { existsSync } from 'fs';
 import express from 'express';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -41,9 +42,15 @@ async function bootstrap() {
 
   const httpAdapter = app.getHttpAdapter();
   const instance = httpAdapter.getInstance();
-  instance.use(
-    express.static(join(__dirname, '..', 'frontend', 'dist')),
-  );
+  const frontendDistPath = join(process.cwd(), 'frontend', 'dist');
+  if (existsSync(frontendDistPath)) {
+    instance.use(express.static(frontendDistPath));
+
+    // SPA fallback for client-side routes, while preserving API/GraphQL routes.
+    instance.get(/^\/(?!api|auth|graphql).*/, (_req, res) => {
+      res.sendFile(join(frontendDistPath, 'index.html'));
+    });
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
