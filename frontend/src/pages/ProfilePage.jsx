@@ -14,7 +14,7 @@ const ProfilePage = () => {
   const { user, setUser } = useAuth()
   const [userResults, setUserResults] = useState([])
   const [quizzes, setQuizzes] = useState({})
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null)
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl || null)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [newUsername, setNewUsername] = useState(user?.username || "")
 
@@ -24,7 +24,6 @@ const ProfilePage = () => {
         const results = await getUserResults(user.id)
         setUserResults(results)
         
-        // Загружаем все викторины для результатов
         const quizzesMap = {}
         for (const result of results) {
           if (!quizzesMap[result.quizId]) {
@@ -41,9 +40,9 @@ const ProfilePage = () => {
   }, [user])
 
   useEffect(() => {
-    setAvatarPreview(user?.avatar || null)
+    setAvatarPreview(user?.avatarUrl || null)
     setNewUsername(user?.username || "")
-  }, [user?.avatar, user?.username])
+  }, [user?.avatarUrl, user?.username])
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
@@ -59,19 +58,9 @@ const ProfilePage = () => {
       const base64 = await fileToBase64(file)
       const updatedUser = await updateUserAvatar(user.id, base64)
       if (updatedUser) {
-        const userData = { ...updatedUser }
-        delete userData.password
-        // Сохраняем все данные пользователя, включая id
-        const finalUserData = {
-          ...userData,
-          id: user.id, // Сохраняем id из текущего пользователя
-          email: user.email, // Сохраняем email
-          username: user.username, // Сохраняем username
-          role: user.role, // Сохраняем роль
-          createdAt: user.createdAt, // Сохраняем дату создания
-        }
+        const finalUserData = { ...user, ...updatedUser }
         setUser(finalUserData)
-        setAvatarPreview(base64)
+        setAvatarPreview(finalUserData.avatarUrl || null)
         localStorage.setItem("user", JSON.stringify(finalUserData))
         alert("Аватар успешно обновлен!")
       }
@@ -85,17 +74,7 @@ const ProfilePage = () => {
     try {
       const updatedUser = await updateUserAvatar(user.id, null)
       if (updatedUser) {
-        const userData = { ...updatedUser }
-        delete userData.password
-        // Сохраняем все данные пользователя
-        const finalUserData = {
-          ...userData,
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          role: user.role,
-          createdAt: user.createdAt,
-        }
+        const finalUserData = { ...user, ...updatedUser }
         setUser(finalUserData)
         setAvatarPreview(null)
         localStorage.setItem("user", JSON.stringify(finalUserData))
@@ -120,17 +99,7 @@ const ProfilePage = () => {
     try {
       const updatedUser = await updateUser(user.id, { username: newUsername.trim() })
       if (updatedUser) {
-        const userData = { ...updatedUser }
-        delete userData.password
-        // Сохраняем все данные пользователя
-        const finalUserData = {
-          ...userData,
-          id: user.id,
-          email: user.email,
-          username: newUsername.trim(),
-          role: user.role,
-          createdAt: user.createdAt,
-        }
+        const finalUserData = { ...user, ...updatedUser, username: newUsername.trim() }
         setUser(finalUserData)
         setIsEditingUsername(false)
         localStorage.setItem("user", JSON.stringify(finalUserData))

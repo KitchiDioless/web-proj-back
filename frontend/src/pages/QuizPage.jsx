@@ -20,7 +20,6 @@ const QuizPage = () => {
       setQuiz(loadedQuiz)
       setLoading(false)
       
-      // Проверяем после загрузки
       if (!loadedQuiz) {
         navigate("/quizzes")
         return
@@ -72,7 +71,6 @@ const QuizPage = () => {
       setCurrentQuestion(currentQuestion + 1)
       setSelectedAnswer(null)
     } else {
-      // Викторина завершена
       if (user) {
         await addQuizResult({
           userId: user.id,

@@ -12,24 +12,21 @@ import {
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const ITEM_HEIGHT = 36 // Высота одного элемента в пикселях
-const VISIBLE_ITEMS = 10 // Количество видимых элементов
-const BUFFER = 5 // Буфер элементов сверху и снизу
+const ITEM_HEIGHT = 36
+const VISIBLE_ITEMS = 10
+const BUFFER = 5
 
-// Виртуализированный список игр
 const VirtualizedGameList = React.memo(({ games, selectedValue, onSelect, searchTerm }) => {
   const [scrollTop, setScrollTop] = useState(0)
   const viewportRef = useRef(null)
   const containerRef = useRef(null)
 
-  // Фильтрация игр по поисковому запросу
   const filteredGames = useMemo(() => {
     if (!searchTerm) return games
     const searchLower = searchTerm.toLowerCase()
     return games.filter((game) => game.name.toLowerCase().includes(searchLower))
   }, [games, searchTerm])
 
-  // Вычисление видимых элементов
   const visibleRange = useMemo(() => {
     const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER)
     const end = Math.min(
@@ -39,14 +36,11 @@ const VirtualizedGameList = React.memo(({ games, selectedValue, onSelect, search
     return { start, end }
   }, [scrollTop, filteredGames.length])
 
-  // Видимые элементы
   const visibleGames = useMemo(() => {
     return filteredGames.slice(visibleRange.start, visibleRange.end)
   }, [filteredGames, visibleRange])
 
-  // Высота всего списка
   const totalHeight = filteredGames.length * ITEM_HEIGHT
-  // Смещение для видимых элементов
   const offsetY = visibleRange.start * ITEM_HEIGHT
 
   const handleScroll = useCallback((e) => {
@@ -92,7 +86,6 @@ const VirtualizedGameList = React.memo(({ games, selectedValue, onSelect, search
 })
 VirtualizedGameList.displayName = 'VirtualizedGameList'
 
-// Компонент выбора игры с виртуализацией
 export const VirtualizedGameSelect = ({ games, value, onChange, selectedGame, getGameDescription, required }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')

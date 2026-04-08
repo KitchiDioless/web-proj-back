@@ -10,7 +10,6 @@ import { fileToBase64, validateImage } from "@/utils/imageUtils"
 import { Plus, Trash2, Upload, X, Image as ImageIcon, Minus } from "lucide-react"
 import { OptimizedInput } from "@/components/OptimizedInput"
 
-// Компонент вопроса с мемоизацией
 const QuestionCard = React.memo(({ question, qIndex, onQuestionChange, onRemove, onImageChange, onRemoveImage }) => {
   const handleAddOption = () => {
     const newOptions = [...question.options, ""]
@@ -18,20 +17,19 @@ const QuestionCard = React.memo(({ question, qIndex, onQuestionChange, onRemove,
   }
 
   const handleRemoveOption = (optionIndex) => {
-    if (question.options.length <= 2) return // Минимум 2 варианта
+    if (question.options.length <= 2) return
     const newOptions = question.options.filter((_, i) => i !== optionIndex)
     let newCorrectAnswer = question.correctAnswer
     if (optionIndex < question.correctAnswer) {
       newCorrectAnswer = question.correctAnswer - 1
     } else if (optionIndex === question.correctAnswer) {
-      newCorrectAnswer = 0 // Если удалили правильный ответ, выбираем первый
+      newCorrectAnswer = 0
     }
     onQuestionChange(qIndex, "options", newOptions)
     onQuestionChange(qIndex, "correctAnswer", newCorrectAnswer)
   }
 
   const handleOptionChange = useCallback((optionIndex, value) => {
-    // Создаем новую копию массива опций с обновленным значением
     const currentOptions = question.options
     const newOptions = [...currentOptions]
     newOptions[optionIndex] = value
@@ -155,7 +153,6 @@ const QuestionCard = React.memo(({ question, qIndex, onQuestionChange, onRemove,
     </Card>
   )
 }, (prevProps, nextProps) => {
-  // Кастомное сравнение для оптимизации - ре-рендер только если изменился этот конкретный вопрос
   return (
     prevProps.question.text === nextProps.question.text &&
     prevProps.question.correctAnswer === nextProps.question.correctAnswer &&
@@ -214,7 +211,7 @@ const QuizBuilderPage = () => {
       }
     }
     loadGameInfo()
-  }, [gameId]) // Убрал description из зависимостей
+  }, [gameId])
 
   const handleCoverImageChange = useCallback(async (e) => {
     const file = e.target.files?.[0]
@@ -310,8 +307,7 @@ const QuizBuilderPage = () => {
       title,
       description,
       coverImage,
-      questions: validQuestions.map((q, index) => ({
-        id: index + 1,
+      questions: validQuestions.map((q) => ({
         text: q.text,
         options: q.options,
         correctAnswer: q.correctAnswer,
@@ -319,9 +315,14 @@ const QuizBuilderPage = () => {
       })),
     }
 
-    addQuiz(quizData)
-    alert("Викторина успешно создана!")
-    navigate("/quizzes")
+    try {
+      await addQuiz(quizData)
+      alert("Викторина успешно создана!")
+      navigate("/quizzes")
+    } catch (error) {
+      console.error(error)
+      alert(error?.message || "Ошибка при создании викторины")
+    }
   }
 
   if (loading) {

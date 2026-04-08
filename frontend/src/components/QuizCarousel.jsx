@@ -100,13 +100,6 @@ export const QuizCarousel = ({ quizzes, getGameName }) => {
       {loadProgress < 100 && (
         <div className="absolute -top-10 left-0 right-0">
           <div className="flex items-center gap-3 text-xs">
-            <span className="text-primary/70 tracking-wider">LOADING_ASSETS:</span>
-            <div className="flex-1 h-2 bg-background/50 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-cyan-400 transition-all duration-300"
-                style={{ width: `${loadProgress}%` }}
-              />
-            </div>
             <span className="text-primary font-bold">{loadProgress}%</span>
           </div>
         </div>

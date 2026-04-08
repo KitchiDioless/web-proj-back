@@ -40,13 +40,14 @@ function App() {
               }
             />
             <Route
-              path="/admin/quiz-builder"
+              path="/quiz-builder"
               element={
-                <AdminRoute>
+                <ProtectedRoute>
                   <QuizBuilderPage />
-                </AdminRoute>
+                </ProtectedRoute>
               }
             />
+            <Route path="/admin/quiz-builder" element={<Navigate to="/quiz-builder" replace />} />
           </Routes>
         </Layout>
       </Router>

@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { getQuizzes, getGames, getGameById } from "@/api/dataService"
 import { QuizVoteButtons } from "@/components/QuizVoteButtons"
 import { Play } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 const QuizzesPage = () => {
+  const { isUser } = useAuth()
   const [quizzes, setQuizzes] = useState([])
   const [gameNames, setGameNames] = useState({})
   const [refreshKey, setRefreshKey] = useState(0)
@@ -44,6 +46,13 @@ const QuizzesPage = () => {
         <p className="text-muted-foreground">
           Выберите викторину и проверьте свои знания
         </p>
+        {isUser() && (
+          <div className="mt-4">
+            <Link to="/quiz-builder">
+              <Button>Создать свою викторину</Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {quizzes.length === 0 ? (

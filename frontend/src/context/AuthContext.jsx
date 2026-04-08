@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
-import { getUserByEmail, createUser } from "@/api/dataService"
+import { loginBackend, registerBackend, refreshBackend } from "@/api/backendService"
 
 const AuthContext = createContext(null)
 
@@ -16,44 +16,73 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Проверяем, есть ли сохраненный пользователь
     const savedUser = localStorage.getItem("user")
+    const savedToken = localStorage.getItem("token")
+    const savedRefresh = localStorage.getItem("refreshToken")
     if (savedUser) {
       setUser(JSON.parse(savedUser))
     }
-    setLoading(false)
+    const bootstrap = async () => {
+      if ((!savedToken || savedToken === "undefined") && savedRefresh) {
+        try {
+          const payload = await refreshBackend(savedRefresh)
+          localStorage.setItem("token", payload.accessToken)
+          localStorage.setItem("accessToken", payload.accessToken)
+          localStorage.setItem("refreshToken", payload.refreshToken)
+          localStorage.setItem("user", JSON.stringify(payload.user))
+          setUser(payload.user)
+        } catch (e) {
+          localStorage.removeItem("user")
+          localStorage.removeItem("token")
+          localStorage.removeItem("accessToken")
+          localStorage.removeItem("refreshToken")
+          setUser(null)
+        }
+      }
+      setLoading(false)
+    }
+    bootstrap()
   }, [])
 
   const login = async (email, password) => {
-    const foundUser = await getUserByEmail(email)
-    if (foundUser && foundUser.password === password) {
-      const userData = { ...foundUser }
-      delete userData.password // Не сохраняем пароль в состоянии
+    try {
+      const payload = await loginBackend(email, password)
+      const userData = payload.user
       setUser(userData)
+      localStorage.setItem("token", payload.accessToken)
+      localStorage.setItem("accessToken", payload.accessToken)
+      localStorage.setItem("refreshToken", payload.refreshToken)
       localStorage.setItem("user", JSON.stringify(userData))
       return { success: true, user: userData }
+    } catch (e) {
+      return { success: false, error: e?.message || "Неверный email или пароль" }
     }
-    return { success: false, error: "Неверный email или пароль" }
   }
 
   const register = async (username, email, password) => {
-    // Проверяем, не существует ли уже пользователь
-    const existingUser = await getUserByEmail(email)
-    if (existingUser) {
-      return { success: false, error: "Пользователь с таким email уже существует" }
+    try {
+      const payload = await registerBackend(username, email, password)
+      const userData = payload.user
+      setUser(userData)
+      localStorage.setItem("token", payload.accessToken)
+      localStorage.setItem("accessToken", payload.accessToken)
+      localStorage.setItem("refreshToken", payload.refreshToken)
+      localStorage.setItem("user", JSON.stringify(userData))
+      return { success: true, user: userData }
+    } catch (e) {
+      return {
+        success: false,
+        error: e?.message || "Ошибка регистрации",
+      }
     }
-
-    const newUser = await createUser({ username, email, password })
-    const userData = { ...newUser }
-    delete userData.password
-    setUser(userData)
-    localStorage.setItem("user", JSON.stringify(userData))
-    return { success: true, user: userData }
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
+    localStorage.removeItem("token")
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("refreshToken")
   }
 
   const isAdmin = () => user?.role === "admin"

@@ -14,12 +14,10 @@ export const PlayersCarousel = ({ players }) => {
   useEffect(() => {
     if (players.length <= 1) return
 
-    // Автопрокрутка без эффекта глюка
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % players.length)
     }, 5000)
 
-    // Анимация сканирующей линии
     const scanline = scanlineRef.current
     if (scanline) {
       const interval = setInterval(() => {

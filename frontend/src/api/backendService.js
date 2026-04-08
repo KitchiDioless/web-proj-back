@@ -1,7 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') || localStorage.getItem('accessToken');
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
 };
@@ -9,13 +12,24 @@ const getAuthHeaders = () => {
 const handleResponse = async (res) => {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `Request failed with status ${res.status}`);
+    let message = text || `Request failed with status ${res.status}`;
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed?.message === 'string') {
+        message = parsed.message;
+      } else if (Array.isArray(parsed?.message) && parsed.message.length > 0) {
+        message = parsed.message.join(', ');
+      } else if (parsed?.error && typeof parsed.error === 'string') {
+        message = parsed.error;
+      }
+    } catch {
+    }
+    throw new Error(message);
   }
   if (res.status === 204) return null;
   return res.json();
 };
 
-// Quizzes
 export const getQuizzes = async () => {
   const res = await fetch(`${API_BASE_URL}/api/quizzes`);
   return handleResponse(res);
@@ -54,6 +68,14 @@ export const updateQuiz = async (id, quiz) => {
   return handleResponse(res);
 };
 
+export const deleteQuiz = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/api/quizzes/${id}`, {
+    method: 'DELETE',
+    headers: { ...getAuthHeaders() },
+  });
+  return handleResponse(res);
+};
+
 export const voteQuiz = async (userId, quizId, vote) => {
   const res = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/vote`, {
     method: 'POST',
@@ -68,7 +90,6 @@ export const getUserVote = async (userId, quizId) => {
   return handleResponse(res);
 };
 
-// Users
 export const getUsers = async () => {
   const res = await fetch(`${API_BASE_URL}/api/users`);
   return handleResponse(res);
@@ -115,7 +136,6 @@ export const updateUserAvatar = async (userId, avatarUrl) => {
   return updateUser(userId, { avatarUrl });
 };
 
-// Results & leaderboard
 export const addQuizResult = async (result) => {
   const res = await fetch(`${API_BASE_URL}/api/results`, {
     method: 'POST',
@@ -137,21 +157,28 @@ export const getLeaderboard = async () => {
   return handleResponse(res);
 };
 
-// Games
 export const getGames = async () => {
   const res = await fetch(`${API_BASE_URL}/api/games`);
-  return handleResponse(res);
+  const games = await handleResponse(res);
+  return (games || []).map((g) => ({
+    ...g,
+    name: g.title ?? g.name,
+    releaseYear: g.releasedAt ? new Date(g.releasedAt).getUTCFullYear() : g.releaseYear ?? null,
+  }));
 };
 
 export const getGameById = async (id) => {
   const res = await fetch(`${API_BASE_URL}/api/games/${id}`);
-  return handleResponse(res);
+  const g = await handleResponse(res);
+  return {
+    ...g,
+    name: g.title ?? g.name,
+    releaseYear: g.releasedAt ? new Date(g.releasedAt).getUTCFullYear() : g.releaseYear ?? null,
+  };
 };
 
-// CSV-загрузка игр на бекенде пока не реализована, оставим loadGames как алиас getGames
 export const loadGames = getGames;
 
-// Auth
 export const loginBackend = async (email, password) => {
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
@@ -166,6 +193,15 @@ export const registerBackend = async (username, email, password) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password }),
+  });
+  return handleResponse(res);
+};
+
+export const refreshBackend = async (refreshToken) => {
+  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
   });
   return handleResponse(res);
 };

@@ -12,7 +12,7 @@ import { User, LogOut, Trophy, Home, BookOpen, Settings, Shield, Github, Mail, I
 import { Avatar } from "./Avatar"
 
 const Layout = ({ children }) => {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, logout, isAdmin, isUser } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
-                      <Avatar src={user.avatar} alt={user.username} size="sm" />
+                      <Avatar src={user.avatarUrl} alt={user.username} size="sm" />
                       {user.username}
                     </Button>
                   </DropdownMenuTrigger>
@@ -73,6 +73,14 @@ const Layout = ({ children }) => {
                         Профиль
                       </Link>
                     </DropdownMenuItem>
+                    {isUser() && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/quiz-builder" className="flex items-center gap-2 cursor-pointer">
+                          <BookOpen className="h-4 w-4" />
+                          Создать викторину
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     {isAdmin() && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
@@ -150,6 +158,12 @@ const Layout = ({ children }) => {
                       <User className="h-4 w-4" />
                       Профиль
                     </Link>
+                    {isUser() && (
+                      <Link to="/quiz-builder" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Создать викторину
+                      </Link>
+                    )}
                     {isAdmin() && (
                       <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
                         <Shield className="h-4 w-4" />

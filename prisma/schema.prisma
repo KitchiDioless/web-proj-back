@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum QuizDifficulty {
+  easy
+  medium
+  hard
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  username     String         @unique @db.VarChar(50)
+  email        String         @unique @db.VarChar(255)
+  passwordHash String         @map("password_hash") @db.Text
+  avatarUrl    String?        @map("avatar_url") @db.Text
+  role         UserRole       @default(user)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quizzes      Quiz[]         @relation("QuizCreatedBy")
+  results      QuizResult[]
+  votes        QuizVote[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Game {
+  id            Int       @id @default(autoincrement())
+  title         String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(255)
+  description   String?   @db.Text
+  coverImageUrl String?   @map("cover_image_url") @db.Text
+  releasedAt    DateTime? @map("released_at") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quizzes       Quiz[]
+
+  @@map("games")
+}
+
+model Quiz {
+  id              Int             @id @default(autoincrement())
+  gameId          Int             @map("game_id")
+  createdByUserId Int             @map("created_by_user_id")
+  title           String          @db.VarChar(255)
+  description     String?         @db.Text
+  coverImage      String?         @map("cover_image") @db.Text
+  difficulty      QuizDifficulty
+  averageRating   Decimal         @default(0) @map("average_rating") @db.Decimal(3, 2)
+  playsCount      Int             @default(0) @map("plays_count")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  game            Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  createdBy       User            @relation("QuizCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  questions       QuizQuestion[]
+  results         QuizResult[]
+  votes           QuizVote[]
+
+  @@index([gameId], map: "idx_quizzes_game_id")
+  @@index([createdByUserId], map: "idx_quizzes_created_by")
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id               Int   @id @default(autoincrement())
+  quizId           Int   @map("quiz_id")
+  order            Int   @map("order")
+  text             String @db.Text
+  image            String? @db.Text
+  options          Json
+  correctOptionIdx Int   @map("correct_option_idx")
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId], map: "idx_quiz_questions_quiz_id")
+  @@map("quiz_questions")
+}
+
+model QuizResult {
+  id             Int      @id @default(autoincrement())
+  quizId         Int      @map("quiz_id")
+  userId         Int      @map("user_id")
+  score          Int
+  correctAnswers Int      @map("correct_answers")
+  totalQuestions Int      @map("total_questions")
+  timeSeconds    Int?     @map("time_seconds")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quizId], map: "idx_quiz_results_quiz_id")
+  @@index([userId], map: "idx_quiz_results_user_id")
+  @@map("quiz_results")
+}
+
+model QuizVote {
+  id        Int      @id @default(autoincrement())
+  quizId    Int      @map("quiz_id")
+  userId    Int      @map("user_id")
+  value     Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, userId])
+  @@index([quizId], map: "idx_quiz_votes_quiz_id")
+  @@index([userId], map: "idx_quiz_votes_user_id")
+  @@map("quiz_votes")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  tokenHash  String   @map("token_hash") @db.Text
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+

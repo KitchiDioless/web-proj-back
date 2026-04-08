@@ -24,11 +24,33 @@
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
+zsx============
 ## Project setup
 
 ```bash
 $ npm install
+```
+
+## Environment
+
+- Copy `env.template` to `.env` and adjust values.
+- Start Postgres:
+
+```bash
+npm run db:up
+```
+
+## Database (Prisma)
+
+```bash
+# create/apply migrations
+npm run prisma:migrate
+
+# generate Prisma client
+npm run prisma:generate
+
+# seed dev data
+npm run prisma:seed
 ```
 
 ## Compile and run the project
@@ -43,6 +65,20 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
+
+## Swagger
+
+- REST docs: `http://localhost:3000/api/docs`
+
+## GraphQL
+
+- Endpoint: `http://localhost:3000/graphql` (POST)
+
+## BFF
+
+- `GET /api/bff/home` (top quizzes + leaderboard, cached)
+- `GET /api/bff/quiz/:id` (JWT required, returns quiz + userVote)
+- `GET /api/bff/game/:id` (game + Wikipedia summary integration)
 
 ## Run tests
 

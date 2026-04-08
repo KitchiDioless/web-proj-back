@@ -1,16 +1,11 @@
-// Сервисы для работы с Firebase Firestore
-// Импорты выполняются динамически при вызове функций
-
 let firestoreModule = null
 let db = null
 let initialized = false
 
-// Инициализация Firebase при первом использовании
 const initFirestore = async () => {
   if (initialized && firestoreModule && db) return
   
   try {
-    // Динамический импорт Firebase модулей
     const firebaseApp = await import('firebase/app')
     const firebaseFirestore = await import('firebase/firestore')
     const firebaseAuth = await import('firebase/auth')
@@ -18,7 +13,6 @@ const initFirestore = async () => {
     
     firestoreModule = firebaseFirestore
     
-    // Инициализация Firebase
     const firebaseConfig = {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key",
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
@@ -43,8 +37,6 @@ const getFirestoreFunctions = () => {
   }
   return firestoreModule
 }
-
-// ==================== QUIZZES ====================
 
 export const getQuizzes = async () => {
   await initFirestore()
@@ -112,7 +104,6 @@ export const getQuizzesByRating = async () => {
     })
   } catch (error) {
     console.error('Error getting quizzes by rating:', error)
-    // Fallback: получаем все и сортируем вручную
     const quizzes = await getQuizzes()
     return quizzes.sort((a, b) => {
       const ratingA = (a.upvotes || 0) - (a.downvotes || 0)
@@ -157,8 +148,6 @@ export const updateQuiz = async (quizId, updates) => {
   }
 }
 
-// ==================== VOTES ====================
-
 export const voteQuiz = async (userId, quizId, vote) => {
   try {
     const voteRef = doc(db, 'quizVotes', `${userId}_${quizId}`)
@@ -173,7 +162,6 @@ export const voteQuiz = async (userId, quizId, vote) => {
     const quiz = quizSnap.data()
     const previousVote = voteSnap.exists() ? voteSnap.data().vote : null
 
-    // Отменяем предыдущий голос
     if (previousVote === 'up') {
       await updateDoc(quizRef, {
         upvotes: Math.max(0, (quiz.upvotes || 0) - 1)
@@ -184,7 +172,6 @@ export const voteQuiz = async (userId, quizId, vote) => {
       })
     }
 
-    // Устанавливаем новый голос
     if (vote === 'up') {
       await updateDoc(quizRef, {
         upvotes: (quiz.upvotes || 0) + 1
@@ -206,7 +193,6 @@ export const voteQuiz = async (userId, quizId, vote) => {
         createdAt: serverTimestamp(),
       })
     } else {
-      // Удаляем голос
       if (voteSnap.exists()) {
         await deleteDoc(voteRef)
       }
@@ -236,8 +222,6 @@ export const getUserVote = async (userId, quizId) => {
 export const getQuizRating = (quiz) => {
   return (quiz.upvotes || 0) - (quiz.downvotes || 0)
 }
-
-// ==================== USERS ====================
 
 export const getUsers = async () => {
   try {
@@ -334,7 +318,6 @@ export const updateUserAvatar = async (userId, avatar) => {
   return await updateUser(userId, { avatar })
 }
 
-// ==================== QUIZ RESULTS ====================
 
 export const addQuizResult = async (result) => {
   try {
@@ -379,10 +362,8 @@ export const getLeaderboard = async () => {
       ...doc.data()
     }))
 
-    // Собираем все уникальные userId
     const userIds = [...new Set(results.map(r => r.userId))]
     
-    // Загружаем всех пользователей сразу
     const usersMap = {}
     for (const userId of userIds) {
       const user = await getUserById(userId)
@@ -391,7 +372,6 @@ export const getLeaderboard = async () => {
       }
     }
 
-    // Группируем результаты по пользователю
     const userScores = {}
     for (const result of results) {
       if (!userScores[result.userId]) {
@@ -409,14 +389,12 @@ export const getLeaderboard = async () => {
       userScores[result.userId].totalQuizzes += 1
     }
 
-    // Вычисляем средний балл
     Object.values(userScores).forEach((user) => {
       user.averageScore = user.totalQuizzes > 0
         ? (user.totalScore / user.totalQuizzes).toFixed(2)
         : 0
     })
 
-    // Сортируем по общему количеству очков
     return Object.values(userScores)
       .sort((a, b) => b.totalScore - a.totalScore)
       .map((user, index) => ({ ...user, rank: index + 1 }))
@@ -425,9 +403,6 @@ export const getLeaderboard = async () => {
     return []
   }
 }
-
-// ==================== GAMES ====================
-// Игры остаются в CSV, так как это статические данные
 
 export { getGames, getGameById, loadGames } from './mockData'
 

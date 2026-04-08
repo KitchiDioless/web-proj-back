@@ -1,6 +1,3 @@
-// Утилиты для работы с изображениями
-
-// Конвертация файла в base64
 export const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -10,9 +7,8 @@ export const fileToBase64 = (file) => {
   })
 }
 
-// Валидация изображения
 export const validateImage = (file) => {
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  const maxSize = 5 * 1024 * 1024
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
   
   if (!file) {

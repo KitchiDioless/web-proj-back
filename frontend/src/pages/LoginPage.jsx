@@ -94,8 +94,8 @@ const LoginPage = () => {
               </form>
               <div className="mt-4 p-4 bg-muted rounded-lg">
                 <p className="text-sm font-semibold mb-2">Тестовые аккаунты:</p>
-                <p className="text-xs text-muted-foreground">Админ: admin@example.com / admin123</p>
-                <p className="text-xs text-muted-foreground">Пользователь: user1@example.com / user123</p>
+                <p className="text-xs text-muted-foreground">Админ: admin@example.com / password</p>
+                <p className="text-xs text-muted-foreground">Пользователь: user@example.com / password</p>
               </div>
             </TabsContent>
 

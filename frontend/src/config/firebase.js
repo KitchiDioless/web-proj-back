@@ -1,12 +1,8 @@
-// Конфигурация Firebase
-// Импорты выполняются только если Firebase установлен
-
 let app = null
 let db = null
 let auth = null
 let storage = null
 
-// Функция для инициализации Firebase (вызывается только если нужно)
 export const initFirebase = async () => {
   if (app) return { app, db, auth, storage }
   
@@ -16,7 +12,6 @@ export const initFirebase = async () => {
     const { getAuth } = await import('firebase/auth')
     const { getStorage } = await import('firebase/storage')
 
-    // Конфигурация Firebase из переменных окружения
     const firebaseConfig = {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key",
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
@@ -39,7 +34,6 @@ export const initFirebase = async () => {
   }
 }
 
-// Экспортируем геттеры
 export const getDb = () => db
 export const getAuthInstance = () => auth
 export const getStorageInstance = () => storage

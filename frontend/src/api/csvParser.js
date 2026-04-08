@@ -70,6 +70,10 @@ export const parseGamesCSV = async () => {
 
 export const getGameDescription = (game) => {
   if (!game) return ''
+
+  if (typeof game.description === 'string' && game.description.trim()) {
+    return game.description
+  }
   
   const parts = []
   

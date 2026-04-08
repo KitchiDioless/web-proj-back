@@ -32,7 +32,6 @@ export const QuizVoteButtons = ({ quiz, onVoteChange }) => {
       return
     }
 
-    // Если кликнули на уже выбранный голос, отменяем его
     const newVote = currentVote === voteType ? null : voteType
     const updatedQuiz = await voteQuiz(user.id, quiz.id, newVote)
     
